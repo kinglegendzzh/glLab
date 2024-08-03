@@ -25,6 +25,15 @@ int width, height;
 float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat;
 
+/**
+ * mvStack
+ * push()：在堆栈顶部创建一个新的条目。我们通常会把目前在堆栈顶部的矩阵复制一份，并和其他的变换结合，然后再利用这个命令把新的矩阵副本推入堆栈中。
+ * pop()：移除（并返回）最顶部的矩阵。
+ * top()：在不移除的情况下，返回堆栈最顶部矩阵的引用。
+ * <stack>.top() *= rotate（构建旋转矩阵的参数）。
+ * <stack>.top() *= scale（构建缩放矩阵的参数）。　　←---　直接对堆栈顶部的矩阵应用变换。
+ * <stack>.top() *= translate（构建平移矩阵的参数）。　　←---　直接对堆栈顶部的矩阵应用变换。
+ */
 stack<glm::mat4> mvStack;
 
 void setupVertices(void) {
@@ -74,7 +83,30 @@ void init(GLFWwindow* window) {
     cameraX = 0.0f; cameraY = 0.0f; cameraZ = 12.0f;
     setupVertices();
 }
-
+/**
+ * 配置
+    •　实例化矩阵堆栈
+    摄像机
+    •　将新矩阵推入堆栈（这将实例化一个空的视图矩阵）
+    •　将变换应用于堆栈顶部的视图矩阵
+    父对象
+    •　将新矩阵推入堆栈（这将是父MV矩阵——对第一个父对象来说，它直接复制一份视图矩阵）
+    •　应用变换，将父对象的模型矩阵和复制的视图矩阵结合
+    •　发送最顶层的矩阵（即对顶点着色器中的MV矩阵统一变量使用"glm::value_ptr()"）
+    •　绘制父对象
+    子对象
+    •　将新矩阵推入堆栈。这将是子对象的MV矩阵，最初直接复制一份父对象的MV矩阵
+    •　应用变换，将子对象的模型矩阵和复制的父MV矩阵结合
+    •　发送最顶层的矩阵（即对顶点着色器中的MV矩阵统一变量使用"glm:: value_ptr()"）
+    •　绘制子对象
+    清理
+    •　将新矩阵推入堆栈。这将是子对象的MV矩阵，最初直接复制一份父对象的MV矩阵
+    •　应用变换，将子对象的模型矩阵和复制的父MV矩阵结合
+    •　发送最顶层的矩阵（即对顶点着色器中的MV矩阵统一变量使用"glm:: value_ptr()"）
+    •　绘制子对象
+ * @param window
+ * @param currentTime
+ */
 void display(GLFWwindow* window, double currentTime) {
     glClear(GL_DEPTH_BUFFER_BIT);
     glClearColor(0.0, 0.0, 0.0, 1.0);
